@@ -1,4 +1,3 @@
-let socket = new ReconnectingWebSocket("ws://127.0.0.1:24050/ws");
 const file = [];
 let api = "";
 async function getAPI() {
@@ -9,26 +8,21 @@ async function getAPI() {
         });
         api = file[0].api;
         document.getElementById("recorderName").innerHTML = file[2].recorder;
-        document.getElementById("resultRecorder").innerHTML = `Recorder: ${file[2].recorder}`;
     } catch (error) {
         console.error("Could not read JSON file", error);
     }
 };
 getAPI();
-socket.onopen = () => console.log("Successfully Connected");
-socket.onclose = event => {
-  console.log("Socket Closed Connection: ", event);
-  socket.send("Client Closed!");
-};
-socket.onerror = error => console.log("Socket Error: ", error);
-
+let socket = new ReconnectingWebSocket("ws://127.0.0.1:24050/ws");
 let box = document.getElementById("box");
 let box2 = document.getElementById("box2");
 let style = document.getElementById("style");
 
 let recorder = document.getElementById("recorder");
 let recorderName = document.getElementById("recorderName");
-
+let mapid = document.getElementById('mapid');
+let mapBG = document.getElementById("mapBG");
+let overlay = document.getElementById("overlay");
 let h320_shadow = document.getElementById("h320_shadow");
 let h300_shadow = document.getElementById("h300_shadow");
 let h200_shadow = document.getElementById("h200_shadow");
@@ -51,7 +45,12 @@ let country = document.getElementById("country");
 let ranks = document.getElementById("ranks");
 let countryRank = document.getElementById("countryRank");
 let playerPP = document.getElementById("playerPP");
-
+socket.onopen = () => console.log("Successfully Connected");
+socket.onclose = event => {
+  console.log("Socket Closed Connection: ", event);
+  socket.send("Client Closed!");
+};
+socket.onerror = error => console.log("Socket Error: ", error);
 function numberWithCommas(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 }
@@ -94,6 +93,7 @@ let tempMapScores = [];
 let playerPosition;
 let t_title;
 let t_subtitle;
+let tempImg;
 
 let t_h320;
 let t_h300;
@@ -123,6 +123,11 @@ socket.onmessage = event => {
         tempUsername = data.gameplay.name;
         username.innerHTML = tempUsername;
         setupUser(tempUsername);
+    }
+    if (tempImg !== data.menu.bm.path.full) {
+        tempImg = data.menu.bm.path.full;
+        data.menu.bm.path.full = data.menu.bm.path.full.replace(/#/g, '%23').replace(/%/g, '%25').replace(/\\/g, '/').replace(/'/g, '%27');
+        mapBG.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url('http://127.0.0.1:24050/Songs/${data.menu.bm.path.full}?a=${Math.random(10000)}')`;
     }
     if (data.gameplay.score == 0) { }
 
@@ -272,6 +277,7 @@ async function setupUser(name) {
                     params: {
                         k: api,
                         u: name,
+                        m: 3,
                     },
                 })
             )["data"];
